@@ -16,7 +16,7 @@ cameras:
     height: 240
     width: 320
   rotate: 0
-  source: rtsp://admin:qwerty12@@192.168.5.55:554/cam/realmonitor?channel=1&subtype=1
+  source: 
 - enabled: true
   fps: 15
   id: 2
@@ -25,7 +25,7 @@ cameras:
     height: 720
     width: 1280
   rotate: 0
-  source: rtsp://admin:admin123@192.168.128.10:554/avstream/channel=1/stream=0.sdp
+  source: 
 - enabled: false
   fps: 10
   id: 3
@@ -34,4 +34,4 @@ cameras:
     height: 720
     width: 1280
   rotate: 0
-  source: rtsp://10.42.0.1:10000/drone_cam
+  source:
