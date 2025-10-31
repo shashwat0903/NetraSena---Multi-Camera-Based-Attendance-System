@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetraSena - Attendance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='client.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <span class="brand-text">NetraSena</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-view="dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-view="cameras">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <span>Camera Feeds</span>
+                </button>
+                <button class="nav-item" data-view="attendance">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                    <span>Attendance</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="connection-status" id="connection-status">
+                    <div class="status-indicator"></div>
+                    <span class="status-text">Connecting...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="page-title">
+                    <h1 id="page-heading">Dashboard</h1>
+                    <p class="page-subtitle" id="page-subtitle">Real-time monitoring and control</p>
+                </div>
+                
+                <div class="top-bar-actions">
+                    <div class="stats-quick">
+                        <div class="stat-item">
+                            <span class="stat-label">Present</span>
+                            <span class="stat-value" id="quick-present">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Absent</span>
+                            <span class="stat-value" id="quick-absent">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Active Cameras</span>
+                            <span class="stat-value" id="quick-cameras">0</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view-content active">
+                <!-- Control Panel -->
+                <section class="control-section">
+                    <div class="section-header">
+                        <h2>System Controls</h2>
+                    </div>
+                    <div class="control-grid">
+                        <div class="control-card">
+                            <div class="control-card-header">
+                                <h3>System Power</h3>
+                            </div>
+                            <div class="control-card-body">
+                                <div class="button-group">
+                                    <button id="start-btn" class="btn btn-primary" onclick="startProcessing()">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                        Start System
+                                    </button>
+                                    <button id="stop-btn" class="btn btn-danger" onclick="stopProcessing()" disabled>
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <rect x="6" y="6" width="12" height="12"/>
+                                        </svg>
+                                        Stop System
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-card">
+                            <div class="control-card-header">
+                                <h3>Attendance Tracking</h3>
+                            </div>
+                            <div class="control-card-body">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="attendance-mode" onchange="toggleAttendanceMode()">
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-label">Enable Attendance Mode</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="control-card">
+                            <div class="control-card-header">
+                                <h3>Database Operations</h3>
+                            </div>
+                            <div class="control-card-body">
+                                <div class="button-group">
+                                    <button class="btn btn-secondary" onclick="refreshAttendance()">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 4v6h6M23 20v-6h-6"/>
+                                            <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/>
+                                        </svg>
+                                        Refresh Daily
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="testDatabase()">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                                        </svg>
+                                        Test Connection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-card">
+                            <div class="control-card-header">
+                                <h3>Generate Report</h3>
+                            </div>
+                            <div class="control-card-body">
+                                <div class="input-group">
+                                    <input type="date" id="pdf-date" class="form-input">
+                                    <button class="btn btn-success" onclick="generatePDF()">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                            <path d="M14 2v6h6M16 13H8m8 4H8m2-8H8"/>
+                                        </svg>
+                                        Generate PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Live Preview -->
+                <section class="preview-section">
+                    <div class="section-header">
+                        <h2>Live Preview</h2>
+                    </div>
+                    <div class="preview-grid" id="preview-grid">
+                        <!-- Preview cameras will be added here -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Cameras View -->
+            <div id="cameras-view" class="view-content">
+                <section class="cameras-section">
+                    <div class="section-header">
+                        <h2>All Camera Feeds</h2>
+                    </div>
+                    <div id="camera-grid" class="camera-grid">
+                        <!-- Camera feeds will be added here dynamically -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Attendance View -->
+            <div id="attendance-view" class="view-content">
+                <section class="attendance-section">
+                    <div class="attendance-columns">
+                        <div class="attendance-card present-card">
+                            <div class="card-header">
+                                <h3>Present Today</h3>
+                                <span class="badge badge-success" id="present-count">0</span>
+                            </div>
+                            <div id="present-list" class="attendance-list">
+                                <!-- Present people will be listed here -->
+                            </div>
+                        </div>
+
+                        <div class="attendance-card absent-card">
+                            <div class="card-header">
+                                <h3>Absent Today</h3>
+                                <span class="badge badge-danger" id="absent-count">0</span>
+                            </div>
+                            <div id="absent-list" class="attendance-list">
+                                <!-- Absent people will be listed here -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='client.js') }}"></script>
+</body>
+</html>

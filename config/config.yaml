@@ -1,0 +1,26 @@
+app:
+  name: "NetraSena"
+  version: "2.0.0"
+  threshold: 0.35
+  screenshot_dir: "data/screenshots"
+  known_faces_dir: "data/known_faces"
+  suspects_dir: "data/suspects"
+  database_path: "data/database.db"
+  alert_sound: "assets/alert.wav"              # Sound for regular alerts (currently unused)
+  suspect_alert_sound: "assets/suspect_alert.wav"  # Sound played only for suspect detection
+  logo: "assets/logo.png"
+  log_dir: "logs"
+
+recognition:
+  detection_threshold: 0.3
+  recognition_threshold: 0.35
+  max_batch_size: 8
+  device: "cuda"  
+  age_estimation: false
+  gender_detection: true
+
+telegram:
+  enabled: false  # Currently DISABLED
+  bot_token: "YOUR_BOT_TOKEN"  # Placeholder - needs actual token from @BotFather
+  chat_id: "YOUR_CHAT_ID"      # Placeholder - needs actual chat ID from @getidsbot
+  rate_limit: 30

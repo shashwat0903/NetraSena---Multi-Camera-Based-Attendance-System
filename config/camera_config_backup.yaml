@@ -1,0 +1,37 @@
+cameras:
+- enabled: true
+  fps: 30
+  id: 0
+  name: Laptop Camera
+  resolution:
+    height: 480
+    width: 640
+  rotate: 0
+  source: 0
+- enabled: false
+  fps: 8
+  id: 1
+  name: CP Plus Camera 1
+  resolution:
+    height: 240
+    width: 320
+  rotate: 0
+  source: rtsp://admin:qwerty12@@192.168.5.55:554/cam/realmonitor?channel=1&subtype=1
+- enabled: true
+  fps: 15
+  id: 2
+  name: CP Plus Camera 2
+  resolution:
+    height: 720
+    width: 1280
+  rotate: 0
+  source: rtsp://admin:admin123@192.168.128.10:554/avstream/channel=1/stream=0.sdp
+- enabled: false
+  fps: 10
+  id: 3
+  name: CP Plus Camera 3
+  resolution:
+    height: 720
+    width: 1280
+  rotate: 0
+  source: rtsp://10.42.0.1:10000/drone_cam

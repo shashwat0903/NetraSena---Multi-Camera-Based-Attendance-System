@@ -1,0 +1,108 @@
+import cv2
+import numpy as np
+from typing import Tuple, Optional
+from loguru import logger
+import time
+from PyQt5.QtGui import QPixmap
+
+def draw_face_info(image: np.ndarray, 
+                  face_bbox: Tuple[int, int, int, int],
+                  name: Optional[str] = None,
+                  confidence: Optional[float] = None,
+                  age: Optional[int] = None,
+                  gender: Optional[str] = None,
+                  camera_name: Optional[str] = None,
+                  timestamp: Optional[float] = None,
+                  color: Optional[Tuple[int, int, int]] = None) -> np.ndarray:
+    try:
+        img = image.copy()
+        x1, y1, x2, y2 = map(int, face_bbox)
+        
+        if color is None:
+            color = (0, 255, 0) if name else (0, 0, 255)
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+        
+        info_text = []
+        if name:
+            info_text.append(f"{name}")
+        if confidence is not None:
+            info_text.append(f"{confidence:.2f}")
+        
+        # Scale text size based on image resolution
+        img_height, img_width = img.shape[:2]
+        if img_width >= 1280 and img_height >= 720:  # High resolution (IP Camera 2)
+            font_scale = 2.5
+            thickness = 6
+            spacing = 70
+            padding = 25
+            bg_height = 60
+        else:  # Lower resolution (Laptop camera, other IP cameras)
+            font_scale = 0.8
+            thickness = 2
+            spacing = 30
+            padding = 10
+            bg_height = 25
+        
+        text_y = y1 - 10 if y1 - 10 > 10 else y2 + 20
+        for i, text in enumerate(info_text):
+            text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)[0]
+            cv2.rectangle(img, 
+                         (x1, text_y - bg_height - i * spacing),
+                         (x1 + text_size[0] + padding, text_y - i * spacing),
+                         color, -1)
+            
+            cv2.putText(img, text, 
+                       (x1 + padding//2, text_y - 15 - i * spacing),
+                       cv2.FONT_HERSHEY_SIMPLEX, font_scale, 
+                       (255, 255, 255), thickness)
+                       
+        return img
+        
+    except Exception as e:
+        logger.error(f"Error drawing face info: {e}")
+        return image
+
+def numpy_to_pixmap(image: np.ndarray) -> 'QPixmap':
+    """Convert numpy array to QPixmap"""
+    try:
+        from PyQt5.QtGui import QImage, QPixmap
+        from PyQt5.QtCore import Qt
+        
+        if image is None:
+            return QPixmap()
+            
+        if len(image.shape) == 2:  # Grayscale
+            h, w = image.shape
+            qimg = QImage(image.data, w, h, w, QImage.Format_Grayscale8)
+        else:  # BGR
+            h, w, ch = image.shape
+            bytes_per_line = ch * w
+            qimg = QImage(image.data, w, h, bytes_per_line, QImage.Format_BGR888)
+            
+        return QPixmap.fromImage(qimg).scaled(
+            w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            
+    except Exception as e:
+        logger.error(f"Error converting numpy to QPixmap: {e}")
+        return QPixmap()
+
+def resize_image(image: np.ndarray, max_width: int = 800, max_height: int = 600) -> np.ndarray:
+    """Resize image while maintaining aspect ratio"""
+    try:
+        if image is None:
+            return None
+            
+        h, w = image.shape[:2]
+        
+        if w <= max_width and h <= max_height:
+            return image
+            
+        ratio = min(max_width / w, max_height / h)
+        new_w = int(w * ratio)
+        new_h = int(h * ratio)
+        
+        return cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
+        
+    except Exception as e:
+        logger.error(f"Error resizing image: {e}")
+        return image
